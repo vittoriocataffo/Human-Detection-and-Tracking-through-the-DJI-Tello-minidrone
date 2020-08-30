@@ -3,15 +3,15 @@ import numpy as np
 import time
 from djitellopy import Tello
 
+#set points (center of the frame coordinates in pixels)
 rifX = 960/2
 rifY = 720/2
 
-
 Kp_X = 0.1
-Ki_X = 0.00
+Ki_X = 0.0
 Kd_X = 0
 
-Kp_Y = 0.1
+Kp_Y = 0.2
 
 Tc = 0.05
 
@@ -21,8 +21,8 @@ derivative_X = 0
 error_X = 0
 previous_error_X = 0
 
-centroX_pre = 0
-centroY_pre = 0
+centroX_pre = rifX
+centroY_pre = rifY
 
 
 net = cv2.dnn.readNetFromCaffe("/home/vittorio/MobileNetSSD_deploy.prototxt.txt", "/home/vittorio/MobileNetSSD_deploy.caffemodel")
@@ -36,20 +36,22 @@ colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 
 drone = Tello()  # declaring drone object
+time.sleep(2.0)
 print("Connecting...")
-
+time.sleep(1.0)
 drone.connect()
+time.sleep(1.0)
 print("BATTERY: ")
 print(drone.get_battery())
 
-
+print("Loading...")
+time.sleep(1.0)
 drone.streamon()  # start camera streaming
 
-print("loading...")
-time.sleep(3.0)
-
-
+print("Takeoff...")
+time.sleep(1.0)
 drone.takeoff()
+time.sleep(2.0)
 
 
 while True:
@@ -109,14 +111,14 @@ while True:
 
 			uY = Kp_Y*error_Y
 
-			print(uX)
-			drone.send_rc_control(0,uY,0,uX)
-			#appena trova una persona esci dal ciclo
+			print(error_X)
+			drone.send_rc_control(0,0,uY,round(uX))
+			#break when a person is recognized
 
 			break	
 
 
-		else: #se nessuna persona viene riconosciuta mantieni centroX e centroY del frame precedente
+		else: #if nobody is recognized take centerX and centerY of the previous frame
 			centroX = centroX_pre
 			centroY = centroY_pre
 			cv2.circle(frame, (int(centroX), int(centroY)), 1, (0,0,255), 10)
@@ -133,24 +135,31 @@ while True:
 
 			uY = Kp_Y*error_Y
 			
-			print(uX)
-			drone.send_rc_control(0,uY,0,uX)
+			print(error_X)
+			drone.send_rc_control(0,0,uY,round(uX))
 
 			continue
 
+	
+	cv2.imshow("Frame", frame)
 
-	#time.sleep(Tc - (time.time() % Tc))
 	end = time.time()
 	elapsed= end-start
-	fps = 1/elapsed
-	cv2.imshow("Frame", frame)
+	if Tc - elapsed > 0:
+		time.sleep(Tc - elapsed)
+	end_ = time.time()
+	elapsed_ = end_ - start
+	fps = 1/elapsed_
 	print("FPS: ",fps)
 
 
 	if cv2.waitKey(1) & 0xFF == ord("q"):
-		cv2.destroyAllWindows()
-		print(drone.get_battery())
-		drone.streamoff()
-		print("landing...")
-		drone.land()
 		break
+
+cv2.destroyAllWindows()
+print(drone.get_battery())
+drone.streamoff()
+drone.land()
+print("Landing...")
+print("BATTERY: ")
+print(drone.get_battery()) 
