@@ -36,11 +36,10 @@ colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 
 drone = Tello()  # declaring drone object
-time.sleep(2.0)
+time.sleep(3.0)
 print("Connecting...")
-time.sleep(1.0)
 drone.connect()
-time.sleep(1.0)
+time.sleep(2.0)
 print("BATTERY: ")
 print(drone.get_battery())
 
@@ -49,10 +48,9 @@ time.sleep(1.0)
 drone.streamon()  # start camera streaming
 
 print("Takeoff...")
-time.sleep(1.0)
 drone.takeoff()
-time.sleep(2.0)
 
+time.sleep(5.0)
 
 while True:
 	start = time.time()
