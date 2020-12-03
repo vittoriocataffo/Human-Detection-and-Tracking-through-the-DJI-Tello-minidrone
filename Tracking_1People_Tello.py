@@ -16,16 +16,19 @@ Ki_Y = 0.0
 #Loop time
 Tc = 0.05
 
-#PID terms initialized
+#PI terms initialized
 integral_X = 0
 error_X = 0
 previous_error_X = 0
+integral_Y = 0
+error_Y = 0
+previous_error_Y = 0
 
 centroX_pre = rifX
 centroY_pre = rifY
 
 #neural network
-net = cv2.dnn.readNetFromCaffe("/home/vittorio/MobileNetSSD_deploy.prototxt.txt", "/home/vittorio/MobileNetSSD_deploy.caffemodel")
+net = cv2.dnn.readNetFromCaffe("/MobileNetSSD_deploy.prototxt.txt", "/MobileNetSSD_deploy.caffemodel") #modify with the NN path
 CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
 	"bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
 	"dog", "horse", "motorbike", "person", "pottedplant", "sheep",
@@ -98,13 +101,13 @@ while True:
 			cv2.putText(frame, label, (startX, y),
 			cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[idx], 2)
 			
-			#PID controller
+			#PI controller
 			integral_X = integral_X + error_X*Tc # updating integral PID term
 			uX = Kp_X*error_X + Ki_X*integral_X # updating control variable uX
 			previous_error_X = error_X # update previous error variable
 			
 			integral_Y = integral_Y + error_Y*Tc # updating integral PID term
-			uY = Kp_Y*error_Y
+			uY = Kp_Y*error_Y + Ki_Y*integral_Y
 			previous_error_Y = error_Y
 			
 			drone.send_rc_control(0,0,round(uY),round(uX))
@@ -128,10 +131,10 @@ while True:
 			previous_error_X = error_X # update previous error variable
 			
 			integral_Y = integral_Y + error_Y*Tc # updating integral PID term
-			uY = Kp_Y*error_Y
+			uY = Kp_Y*error_Y + Ki_Y*integral_Y
 			previous_error_Y = error_Y
 			
-			drone.send_rc_control(0,0,uY,round(uX))
+			drone.send_rc_control(0,0,round(uY),round(uX))
 
 			continue
 
