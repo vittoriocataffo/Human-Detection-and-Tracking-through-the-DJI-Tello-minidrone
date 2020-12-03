@@ -7,24 +7,24 @@ from djitellopy import Tello
 rifX = 960/2
 rifY = 720/2
 
+#PI constant
 Kp_X = 0.1
 Ki_X = 0.0
-Kd_X = 0
-
 Kp_Y = 0.2
+Ki_Y = 0.0
 
+#Loop time
 Tc = 0.05
 
-
+#PID terms initialized
 integral_X = 0
-derivative_X = 0
 error_X = 0
 previous_error_X = 0
 
 centroX_pre = rifX
 centroY_pre = rifY
 
-
+#neural network
 net = cv2.dnn.readNetFromCaffe("/home/vittorio/MobileNetSSD_deploy.prototxt.txt", "/home/vittorio/MobileNetSSD_deploy.caffemodel")
 CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
 	"bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
@@ -36,7 +36,7 @@ colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 
 drone = Tello()  # declaring drone object
-time.sleep(2.0)
+time.sleep(2.0) #waiting 2 seconds
 print("Connecting...")
 drone.connect()
 print("BATTERY: ")
@@ -45,7 +45,7 @@ time.sleep(1.0)
 print("Loading...")
 drone.streamon()  # start camera streaming
 print("Takeoff...")
-drone.takeoff()
+drone.takeoff() # drone takeoff
 
 
 while True:
@@ -97,22 +97,23 @@ while True:
 			y = startY - 15 if startY - 15 > 15 else startY + 15
 			cv2.putText(frame, label, (startX, y),
 			cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors[idx], 2)
-
-			integral_X = integral_X + error_X*Tc
-			derivative_X = (error_X - previous_error_X)/Tc
-			uX = Kp_X*error_X + Ki_X*integral_X + Kd_X*derivative_X
-			previous_error_X = error_X
-
+			
+			#PID controller
+			integral_X = integral_X + error_X*Tc # updating integral PID term
+			uX = Kp_X*error_X + Ki_X*integral_X # updating control variable uX
+			previous_error_X = error_X # update previous error variable
+			
+			integral_Y = integral_Y + error_Y*Tc # updating integral PID term
 			uY = Kp_Y*error_Y
-
-			print(error_X)
-			drone.send_rc_control(0,0,uY,round(uX))
+			previous_error_Y = error_Y
+			
+			drone.send_rc_control(0,0,round(uY),round(uX))
 			#break when a person is recognized
 
 			break	
 
 
-		else: #if nobody is recognized take centerX and centerY of the previous frame
+		else: #if nobody is recognized take as reference centerX and centerY of the previous frame
 			centroX = centroX_pre
 			centroY = centroY_pre
 			cv2.circle(frame, (int(centroX), int(centroY)), 1, (0,0,255), 10)
@@ -122,14 +123,14 @@ while True:
 
 			cv2.line(frame, (int(rifX),int(rifY)), (int(centroX),int(centroY)), (0,255,255),5 )
 
-			integral_X = integral_X + error_X*Tc
-			derivative_X = (error_X - previous_error_X)/Tc
-			uX = Kp_X*error_X + Ki_X*integral_X + Kd_X*derivative_X
-			previous_error_X = error_X
-
-			uY = Kp_Y*error_Y
+			integral_X = integral_X + error_X*Tc # updating integral PID term
+			uX = Kp_X*error_X + Ki_X*integral_X # updating control variable uX
+			previous_error_X = error_X # update previous error variable
 			
-			print(error_X)
+			integral_Y = integral_Y + error_Y*Tc # updating integral PID term
+			uY = Kp_Y*error_Y
+			previous_error_Y = error_Y
+			
 			drone.send_rc_control(0,0,uY,round(uX))
 
 			continue
