@@ -1,4 +1,4 @@
-# Human-Detection-and-Tracking-DJI-Tello-minidrone
+# Human-Detection-and-Tracking-through-the-DJI-Tello-minidrone
 
 A simple Python script used to programme the DJI Tello minidrone to make it able to detect and track people.
 
